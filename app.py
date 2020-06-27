@@ -45,8 +45,12 @@ class Venue(db.Model):
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    # Add-ons
+    website = db.Column(db.String(120), nullable=True)
+    seeking_talent = db.Column(db.Boolean, default=True)
+    seeking_description = db.Column(db.String(500), nullable=True)
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 class Artist(db.Model):
     __tablename__ = 'Artist'
@@ -56,13 +60,23 @@ class Artist(db.Model):
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    # genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    # Add-ons
+    website = db.Column(db.String(120), nullable=True)
+    seeking_talent = db.Column(db.Boolean, default=True)
+    seeking_description = db.Column(db.String(500), nullable=True)
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+# class Genre(db.Model):
+#   __tablename__ = 'Genre'
+#   id = db.Column(db.Integer, primary_key=True)
+#   name = db.Column(db.String(20))
+#   # venue_id =
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -137,18 +151,18 @@ def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
   data1={
-    "id": 1,
-    "name": "The Musical Hop",
+    "id": 1, # A
+    "name": "The Musical Hop", # A
     "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
+    "address": "1015 Folsom Street", # A
+    "city": "San Francisco", # A
+    "state": "CA", # A
+    "phone": "123-123-1234", # A
     "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
+    "facebook_link": "https://www.facebook.com/TheMusicalHop", # A
     "seeking_talent": True,
     "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
+    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60", # A
     "past_shows": [{
       "artist_id": 4,
       "artist_name": "Guns N Petals",
