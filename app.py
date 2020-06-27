@@ -50,7 +50,8 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
 
-    children = db.relationship('VenueGenre', backref='Venue')
+    children = db.relationship('VenueGenre', backref="Venue", lazy=True,
+                               collection_class="list", cascade="delete-orphan")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
@@ -70,6 +71,9 @@ class Artist(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
 
+    children = db.relationship('ArtistGenre', backref="Artist", lazy=True,
+                               collection_class="list", cascade="delete-orphan")
+
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
@@ -81,15 +85,15 @@ class Artist(db.Model):
 
 class VenueGenre(db.Model):
   __tablename__ = 'VenueGenre'
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String(20))
-  venue_id = db.Column(db.Integer)
+  name = db.Column(db.String(20), primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False,
+                       primary_key=True)
 
 class ArtistGenre(db.Model):
   __tablename__ = 'ArtistGenre'
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.COlumn(db.String(20))
-  artist_id = db.Column(db.Integer)
+  name = db.Column(db.String(20), primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False,
+                        primary_key=True)
 
 #----------------------------------------------------------------------------#
 # Filters.
