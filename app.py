@@ -86,14 +86,12 @@ class Artist(db.Model):
 class VenueGenre(db.Model):
   __tablename__ = 'VenueGenre'
   name = db.Column(db.String(20), primary_key=True)
-  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False,
-                       primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False, primary_key=True)
 
 class ArtistGenre(db.Model):
   __tablename__ = 'ArtistGenre'
   name = db.Column(db.String(20), primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False,
-                        primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False, primary_key=True)
 
 #----------------------------------------------------------------------------#
 # Filters.
