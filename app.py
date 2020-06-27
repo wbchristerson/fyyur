@@ -35,7 +35,7 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -50,13 +50,13 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
 
-    children = db.relationship('VenueGenre', backref="Venue", lazy=True,
+    children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class="list", cascade="delete-orphan")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artist'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -71,27 +71,33 @@ class Artist(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
 
-    children = db.relationship('ArtistGenre', backref="Artist", lazy=True,
+    children = db.relationship('ArtistGenre', backref="artist", lazy=True,
                                collection_class="list", cascade="delete-orphan")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
+class Show(db.Model):
+  __tablename__ = 'show'
+  id = db.Column(db.Integer, primary_key=True)
+  artist_id = db.Column(db.Integer)
+  venue_id = db.Column(db.Integer)
+  start_time = db.Column(db.DateTime)
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
 # migrate'?
 
 class VenueGenre(db.Model):
-  __tablename__ = 'VenueGenre'
+  __tablename__ = 'venueGenre'
   name = db.Column(db.String(20), primary_key=True)
-  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False, primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False, primary_key=True)
 
 class ArtistGenre(db.Model):
-  __tablename__ = 'ArtistGenre'
+  __tablename__ = 'artistGenre'
   name = db.Column(db.String(20), primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False, primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False, primary_key=True)
 
 #----------------------------------------------------------------------------#
 # Filters.
