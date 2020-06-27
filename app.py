@@ -23,6 +23,7 @@ moment = Moment(app)
 app.config.from_object('config')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
 
@@ -35,7 +36,7 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'venue'
+    # __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -52,8 +53,11 @@ class Venue(db.Model):
 
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class="list", cascade="delete-orphan")
-
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
+
+
+    def __repr__(self):
+      return '<Venue Name: %r>' % self.name
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -83,13 +87,6 @@ shows = db.Table('shows',
                  db.Column('start_time', db.DateTime, nullable=False),
                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
-
-# class Show(db.Model):
-#   __tablename__ = 'show'
-#   id = db.Column(db.Integer, primary_key=True)
-#   artist_id = db.Column(db.Integer)
-#   venue_id = db.Column(db.Integer)
-#   start_time = db.Column(db.DateTime)
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
@@ -269,6 +266,17 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+
+  venue = Venue()
+    # name = request.form.get('name'),
+    # city = request.form.get('city'),
+    # state = request.form.get('state'),
+    # address = request.form.get('address'),
+    # phone = request.form.get('phone'),
+    # facebook_link = request.form.get('facebook_link')
+  # )
+  db.session.add(venue)
+  db.session.commit()
 
   # on successful db insert, flash success
   flash('Venue ' + request.form['name'] + ' was successfully listed!')
