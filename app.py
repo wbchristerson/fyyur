@@ -78,12 +78,18 @@ class Artist(db.Model):
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
-class Show(db.Model):
-  __tablename__ = 'show'
-  id = db.Column(db.Integer, primary_key=True)
-  artist_id = db.Column(db.Integer)
-  venue_id = db.Column(db.Integer)
-  start_time = db.Column(db.DateTime)
+shows = db.Table('shows',
+                 db.Column('id', db.Integer, primary_key=True),
+                 db.Column('start_time', db.DateTime, nullable=False),
+                 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+                 db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
+
+# class Show(db.Model):
+#   __tablename__ = 'show'
+#   id = db.Column(db.Integer, primary_key=True)
+#   artist_id = db.Column(db.Integer)
+#   venue_id = db.Column(db.Integer)
+#   start_time = db.Column(db.DateTime)
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
