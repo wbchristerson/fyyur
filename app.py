@@ -36,7 +36,7 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    # __tablename__ = 'venue'
+    __tablename__ = 'venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -46,13 +46,13 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    # Add-ons
+    # # Add-ons
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
-
+    #
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
-                               collection_class="list", cascade="delete-orphan")
+                               collection_class=list, cascade="delete-orphan")
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 
@@ -64,38 +64,41 @@ class Artist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120), nullable=False)
-    # genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    # Add-ons
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=True)
-    seeking_description = db.Column(db.String(500))
-
-    children = db.relationship('ArtistGenre', backref="artist", lazy=True,
-                               collection_class="list", cascade="delete-orphan")
+    # city = db.Column(db.String(120))
+    # state = db.Column(db.String(120))
+    # phone = db.Column(db.String(120), nullable=False)
+    # # genres = db.Column(db.String(120))
+    # image_link = db.Column(db.String(500))
+    # facebook_link = db.Column(db.String(120))
+    # # Add-ons
+    # website = db.Column(db.String(120))
+    # seeking_talent = db.Column(db.Boolean, default=True)
+    # seeking_description = db.Column(db.String(500))
+    #
+    # children = db.relationship('ArtistGenre', backref="artist", lazy=True,
+    #                            collection_class="list", cascade="delete-orphan")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
-shows = db.Table('shows',
-                 db.Column('id', db.Integer, primary_key=True),
-                 db.Column('start_time', db.DateTime, nullable=False),
-                 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
-                 db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
+# shows = db.Table('shows',
+#                  db.Column('id', db.Integer, primary_key=True),
+#                  db.Column('start_time', db.DateTime, nullable=False),
+#                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+#                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
 # migrate'?
 
 class VenueGenre(db.Model):
-  __tablename__ = 'venueGenre'
+  # __tablename__ = 'venueGenre'
   name = db.Column(db.String(20), primary_key=True)
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False, primary_key=True)
+
+  def __repr__(self):
+    return f'<VenueGenre {self.name} {self.venue_id}>'
 
 class ArtistGenre(db.Model):
   __tablename__ = 'artistGenre'
@@ -267,14 +270,14 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
-  venue = Venue()
-    # name = request.form.get('name'),
-    # city = request.form.get('city'),
-    # state = request.form.get('state'),
-    # address = request.form.get('address'),
-    # phone = request.form.get('phone'),
-    # facebook_link = request.form.get('facebook_link')
-  # )
+  venue = Venue(
+    name=request.form.get('name'),
+    city = request.form.get('city'),
+    state = request.form.get('state'),
+    address = request.form.get('address'),
+    phone = request.form.get('phone'),
+    facebook_link = request.form.get('facebook_link')
+  )
   db.session.add(venue)
   db.session.commit()
 
