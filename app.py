@@ -279,7 +279,7 @@ def create_venue_submission():
     facebook_link = request.form.get('facebook_link')
   )
 
-  y = request.form['genres']
+  y = request.form.getlist('genres')
   flash(y)
 
   db.session.add(venue)
