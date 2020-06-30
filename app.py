@@ -278,6 +278,10 @@ def create_venue_submission():
     phone = request.form.get('phone'),
     facebook_link = request.form.get('facebook_link')
   )
+
+  y = request.form['genres']
+  flash(y)
+
   db.session.add(venue)
   db.session.commit()
 
