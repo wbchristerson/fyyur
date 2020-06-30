@@ -45,7 +45,7 @@ class Venue(db.Model):
     address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
+    facebook_link = db.Column(db.String(120), nullable=False)
     # # Add-ons
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, default=True)
@@ -64,36 +64,36 @@ class Artist(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    # city = db.Column(db.String(120))
-    # state = db.Column(db.String(120))
-    # phone = db.Column(db.String(120), nullable=False)
-    # # genres = db.Column(db.String(120))
-    # image_link = db.Column(db.String(500))
-    # facebook_link = db.Column(db.String(120))
-    # # Add-ons
-    # website = db.Column(db.String(120))
-    # seeking_talent = db.Column(db.Boolean, default=True)
-    # seeking_description = db.Column(db.String(500))
-    #
-    # children = db.relationship('ArtistGenre', backref="artist", lazy=True,
-    #                            collection_class="list", cascade="delete-orphan")
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    phone = db.Column(db.String(120), nullable=False)
+    # genres = db.Column(db.String(120))
+    image_link = db.Column(db.String(500))
+    facebook_link = db.Column(db.String(120))
+    # Add-ons
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, default=True)
+    seeking_description = db.Column(db.String(500))
+
+    children = db.relationship('ArtistGenre', backref="artist", lazy=True,
+                               collection_class=list, cascade="delete-orphan")
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
-# shows = db.Table('shows',
-#                  db.Column('id', db.Integer, primary_key=True),
-#                  db.Column('start_time', db.DateTime, nullable=False),
-#                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
-#                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
+shows = db.Table('shows',
+                 db.Column('id', db.Integer, primary_key=True),
+                 db.Column('start_time', db.DateTime, nullable=False),
+                 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+                 db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
 # migrate'?
 
 class VenueGenre(db.Model):
-  # __tablename__ = 'venueGenre'
+  __tablename__ = 'venueGenre'
   name = db.Column(db.String(20), primary_key=True)
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False, primary_key=True)
 
