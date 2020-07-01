@@ -279,8 +279,11 @@ def create_venue_submission():
     facebook_link = request.form.get('facebook_link')
   )
 
-  y = request.form.getlist('genres')
-  flash(y)
+  genre_list = request.form.getlist('genres')
+
+  for genre in genre_list:
+    flash(venue)
+    db.session.add(VenueGenre(venue_id=venue.id, name=genre))
 
   db.session.add(venue)
   db.session.commit()
