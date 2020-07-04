@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -47,15 +47,12 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120), nullable=False)
-    # # Add-ons
+    # Add-ons
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
-    #
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class=list, cascade="delete-orphan")
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
-
 
     # TODO: Remove this commented-out testing repr method
     # def __repr__(self):
@@ -302,20 +299,20 @@ def create_venue_submission():
     db.session.commit()
 
     for genre in genre_list:
-      db.session.dadd(VenueGenre(venue_id=venue.id, name=genre))
+      db.session.add(VenueGenre(venue_id=venue.id, name=genre))
     db.session.commit()
     # on successful db insert, flash success
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  except E:
+  except:
     db.session.rollback()
     error=True
     print(sys.exc_info())
-    flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+    flash('An error occurred. Venue ' + request.form.get('name') + ' could not be listed.')
   finally:
     db.session.close()
 
   if error:
-    abort (400)
+    abort(400)
 
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
@@ -504,14 +501,55 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
+  error = False
 
-  # on successful db insert, flash success
-  flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-  return render_template('pages/home.html')
+  try:
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    phone = db.Column(db.String(120), nullable=False)
+    # genres = db.Column(db.String(120))
+    image_link = db.Column(db.String(500))
+    facebook_link = db.Column(db.String(120))
+    # Add-ons
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, default=True)
+    seeking_description = db.Column(db.String(500))
+
+    children = db.relationship('ArtistGenre', backref="artist", lazy=True,
+                               collection_class=list, cascade="delete-orphan")
+
+    artist = Artist(
+      name=request.form.get('name'),
+      city = request.form.get('city'),
+      state = request.form.get('state'),
+      phone = request.form.get('phone'),
+      facebook_link = request.form.get('facebook_link')
+    )
+
+    genre_list = request.form.getlist('genres')
+    db.session.add(artist)
+    db.session.commit()
+
+    for genre in genre_list:
+      db.session.add(ArtistGenre(artist_id=artist.id, name=genre))
+    db.session.commit()
+    # on successful db insert, flash success
+    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+  except:
+    db.session.rollback()
+    error=True
+    print(sys.exc_info())
+    flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
+  finally:
+    db.session.close()
+
+  if error:
+    abort(400)
+  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  return redirect(url_for('index'))
 
 
 #  Shows
