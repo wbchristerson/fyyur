@@ -14,6 +14,7 @@ from flask_wtf import Form
 from forms import *
 from config import SQLALCHEMY_DATABASE_URI
 from flask_migrate import Migrate
+import sys
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -56,8 +57,25 @@ class Venue(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
 
 
-    def __repr__(self):
-      return '<Venue Name: %r>' % self.name
+    # TODO: Remove this commented-out testing repr method
+    # def __repr__(self):
+    #   repr_arr = []
+    #   repr_arr.append("Venue:")
+    #   repr_arr.append("id: " + str(self.id))
+    #   repr_arr.append("name: " + str(self.name))
+    #   repr_arr.append("city: " + str(self.city))
+    #   repr_arr.append("state: " + str(self.state))
+    #   repr_arr.append("address: " + str(self.address))
+    #   repr_arr.append("phone: " + str(self.phone))
+    #   repr_arr.append("image_link: " + str(self.image_link))
+    #   repr_arr.append("facebook_link: " + str(self.facebook_link))
+    #   repr_arr.append("website: " + str(self.website))
+    #   repr_arr.append("seeking_talent: " + str(self.seeking_talent))
+    #   repr_arr.append("seeking_description: " + str(self.seeking_description))
+    #   return ",\n".join(repr_arr)
+
+    def __repr__ (self):
+      return f'<Venue %r>' % self.name;
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -270,30 +288,44 @@ def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
 
-  venue = Venue(
-    name=request.form.get('name'),
-    city = request.form.get('city'),
-    state = request.form.get('state'),
-    address = request.form.get('address'),
-    phone = request.form.get('phone'),
-    facebook_link = request.form.get('facebook_link')
-  )
+  error = False
 
-  genre_list = request.form.getlist('genres')
+  try:
+    venue = Venue(
+      name=request.form.get('name'),
+      city = request.form.get('city'),
+      state = request.form.get('state'),
+      address = request.form.get('address'),
+      phone = request.form.get('phone'),
+      facebook_link = request.form.get('facebook_link')
+    )
 
-  for genre in genre_list:
-    flash(venue)
-    db.session.add(VenueGenre(venue_id=venue.id, name=genre))
+    genre_list = request.form.getlist('genres')
+    db.session.add(venue)
+    db.session.commit()
 
-  db.session.add(venue)
-  db.session.commit()
+    for genre in genre_list:
+      db.session.add(VenueGenre(venue_id=venue.id, name=genre))
+    db.session.commit()
+    # on successful db insert, flash success
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  except:
+    db.session.rollback()
+    error=True
+    print(sys.exc_info())
+    flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  finally:
+    db.session.close()
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  if error:
+    abort (400)
+
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+
+  # return render_template('pages/home.html')
+  return redirect(url_for('index'))
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
