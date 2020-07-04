@@ -52,7 +52,11 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
-                               collection_class=list, cascade="delete-orphan")
+                               collection_class=list, cascade="all, delete-orphan")
+
+    artists = db.relationship("Artist", secondary="shows")
+    # artist_shows = db.relationship('Artist_Shows', secondary=shows,
+    #                                backref=db.backref('venue', lazy=True))
 
     # TODO: Remove this commented-out testing repr method
     # def __repr__(self):
@@ -91,17 +95,24 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500))
 
     children = db.relationship('ArtistGenre', backref="artist", lazy=True,
-                               collection_class=list, cascade="delete-orphan")
+                               collection_class=list, cascade="all, delete-orphan")
+    venue = db.relationship("Venue", secondary="shows")
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate - done
+class Show(db.Model):
+  __tablename__ = 'shows'
+  id = db.Column(db.Integer, primary_key=True)
+  start_time = db.Column(db.DateTime, nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+  venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
+  artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
 
-shows = db.Table('shows',
-                 db.Column('id', db.Integer, primary_key=True),
-                 db.Column('start_time', db.DateTime, nullable=False),
-                 db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
-                 db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
+# shows = db.Table('shows',
+#                  db.Column('id', db.Integer, primary_key=True),
+#                  db.Column('start_time', db.DateTime, nullable=False),
+#                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+#                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
@@ -504,23 +515,6 @@ def create_artist_submission():
   error = False
 
   try:
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120), nullable=False)
-    # genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    # Add-ons
-    website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=True)
-    seeking_description = db.Column(db.String(500))
-
-    children = db.relationship('ArtistGenre', backref="artist", lazy=True,
-                               collection_class=list, cascade="delete-orphan")
-
     artist = Artist(
       name=request.form.get('name'),
       city = request.form.get('city'),
@@ -606,15 +600,63 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-  # called to create new shows in the db, upon submitting new show listing form
-  # TODO: insert form data as a new Show record in the db, instead
+  error = False
 
-  # on successful db insert, flash success
-  flash('Show was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Show could not be listed.')
+  # shows = db.Table('shows',
+  #                  db.Column('id', db.Integer, primary_key=True),
+  #                  db.Column('start_time', db.DateTime, nullable=False),
+  #                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
+  #                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
+
+  try:
+    # show = Shows(
+    #   start_time=request.form.get('start_time'),
+    #   venue_id=request.form.get('venue_id'),
+    #   artist_id=request.form.get('artist_id')
+    # )
+    #
+    show = Show(
+      venue_id=request.form.get('venue_id'),
+      artist_id=request.form.get('artist_id'),
+      start_time=request.form.get('start_time')
+    )
+    # venue = Venue.query.get(request.form.get('venue_id'))
+    # artist = Artist.query.get(request.form.get('artist_id'))
+    # venue.artist_shows.append(artist)
+    # artist.venue_shows.append(venue)
+
+    # venue = Venue(
+    #   name=request.form.get('name'),
+    #   city = request.form.get('city'),
+    #   state = request.form.get('state'),
+    #   address = request.form.get('address'),
+    #   phone = request.form.get('phone'),
+    #   facebook_link = request.form.get('facebook_link')
+    # )
+
+    db.session.add(show)
+    # db.session.add(venue)
+    db.session.commit()
+
+    # for genre in genre_list:
+    #   db.session.add(VenueGenre(venue_id=venue.id, name=genre))
+    # db.session.commit()
+    # on successful db insert, flash success
+    flash('Show was successfully listed!')
+  except:
+    db.session.rollback()
+    error=True
+    print(sys.exc_info())
+    flash('An error occurred. Show could not be listed.')
+  finally:
+    db.session.close()
+
+  if error:
+    abort(400)
+
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  return redirect(url_for('index'))
+
 
 @app.errorhandler(404)
 def not_found_error(error):
