@@ -54,7 +54,7 @@ class Venue(db.Model):
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class=list, cascade="all, delete-orphan")
 
-    # artists = db.relationship("Artist", secondary="shows")
+    artists = db.relationship("Show", backref="venue")
     # artist_shows = db.relationship('Artist_Shows', secondary=shows,
     #                                backref=db.backref('venue', lazy=True))
 
@@ -96,17 +96,19 @@ class Artist(db.Model):
 
     children = db.relationship('ArtistGenre', backref="artist", lazy=True,
                                collection_class=list, cascade="all, delete-orphan")
-    # venue = db.relationship("Venue", secondary="shows")
+    venue = db.relationship("Show", backref="artist")
 
-# class Show(db.Model):
-#   __tablename__ = 'shows'
-#   id = db.Column(db.Integer, primary_key=True)
-#   start_time = db.Column(db.DateTime, nullable=False)
-#   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
-#   artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
-#
-#   venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
-#   artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
+class Show(db.Model):
+  __tablename__ = 'shows'
+  id = db.Column(db.Integer, primary_key=True)
+  start_time = db.Column(db.DateTime, nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
+  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
+  artist = db.relationship("Artist", db.backref("artists"))
+  venue = db.relationship("Venue", db.backref("venue"))
+
+  # venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
+  # artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
 
 # shows = db.Table('shows',
 #                  db.Column('id', db.Integer, primary_key=True),
@@ -608,6 +610,16 @@ def create_show_submission():
   #                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
   #                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
 
+
+  # class Show(db.Model):
+  #   __tablename__ = 'shows'
+  # id = db.Column(db.Integer, primary_key=True)
+  # start_time = db.Column(db.DateTime, nullable=False)
+  # venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
+  # artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
+  # artist = db.relationship("Artist", db.backref("artists"))
+  # venue = db.relationship("Venue", db.backref("venue"))
+
   try:
     # show = Shows(
     #   start_time=request.form.get('start_time'),
@@ -620,6 +632,13 @@ def create_show_submission():
       artist_id=request.form.get('artist_id'),
       start_time=request.form.get('start_time')
     )
+    venue = Venue.query.get(venue_id)
+    artist = Artist.query.get(artist_id)
+
+    show.artist.append(artist)
+    venue.artists.append(show)
+
+
     # venue = Venue.query.get(request.form.get('venue_id'))
     # artist = Artist.query.get(request.form.get('artist_id'))
     # venue.artist_shows.append(artist)
