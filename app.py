@@ -54,7 +54,7 @@ class Venue(db.Model):
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class=list, cascade="all, delete-orphan")
 
-    artists = db.relationship("Show", backref="venue")
+    artists = db.relationship("Show", backref="show_venue")
     # artist_shows = db.relationship('Artist_Shows', secondary=shows,
     #                                backref=db.backref('venue', lazy=True))
 
@@ -96,7 +96,7 @@ class Artist(db.Model):
 
     children = db.relationship('ArtistGenre', backref="artist", lazy=True,
                                collection_class=list, cascade="all, delete-orphan")
-    venue = db.relationship("Show", backref="artist")
+    venue = db.relationship("Show", backref="show_artist")
 
 class Show(db.Model):
   __tablename__ = 'shows'
@@ -105,7 +105,7 @@ class Show(db.Model):
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
   artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
   artist = db.relationship("Artist", db.backref("artists"))
-  venue = db.relationship("Venue", db.backref("venue"))
+  venue = db.relationship("Venue", db.backref("venues"))
 
   # venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
   # artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
@@ -635,7 +635,7 @@ def create_show_submission():
     venue = Venue.query.get(venue_id)
     artist = Artist.query.get(artist_id)
 
-    show.artist.append(artist)
+    show.show_artist.append(artist)
     venue.artists.append(show)
 
 
