@@ -15,6 +15,7 @@ from forms import *
 from config import SQLALCHEMY_DATABASE_URI
 from flask_migrate import Migrate
 import sys
+from datetime import datetime
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -161,29 +162,44 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
+  all_venues = Venue.query.order_by("city").all()
+  data = []
+
+  for venue in all_venues:
+    num_upcoming_shows = Show.query.filter(Show.venue_id==venue.id, Show.start_time > datetime.now()).count()
+    print()
+    print("num:", num_upcoming_shows)
+    print()
+    if len(data) == 0 or data[-1]["city"] != venue.city:
+      data.append({ "city": venue.city, "state": venue.state, "venues": [] })
+    data[-1]["venues"].append({ "id": venue.id, "name": venue.name,
+                             "num_upcoming_shows": num_upcoming_shows})
+
+
+
+  # # TODO: replace with real venues data.
+  # #       num_shows should be aggregated based on number of upcoming shows per venue.
+  # data=[{
+  #   "city": "San Francisco",
+  #   "state": "CA",
+  #   "venues": [{
+  #     "id": 1,
+  #     "name": "The Musical Hop",
+  #     "num_upcoming_shows": 0,
+  #   }, {
+  #     "id": 3,
+  #     "name": "Park Square Live Music & Coffee",
+  #     "num_upcoming_shows": 1,
+  #   }]
+  # }, {
+  #   "city": "New York",
+  #   "state": "NY",
+  #   "venues": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }]
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -630,8 +646,8 @@ def create_show_submission():
   finally:
     db.session.close()
 
-  if error:
-    abort(400)
+  # if error:
+  #   abort(400)
 
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
