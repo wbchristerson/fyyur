@@ -308,7 +308,7 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  error = False
+  error_code = None
 
   try:
     venue = Venue(
@@ -331,14 +331,14 @@ def create_venue_submission():
     flash('Venue ' + request.form['name'] + ' was successfully listed!')
   except:
     db.session.rollback()
-    error=True
+    error_code=404
     print(sys.exc_info())
     flash('An error occurred. Venue ' + request.form.get('name') + ' could not be listed.')
   finally:
     db.session.close()
 
-  if error:
-    abort(400)
+  if error_code:
+    abort(error_code)
 
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
@@ -535,7 +535,7 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
-  error = False
+  error_code = None
 
   try:
     artist = Artist(
@@ -557,14 +557,14 @@ def create_artist_submission():
     flash('Artist ' + request.form['name'] + ' was successfully listed!')
   except:
     db.session.rollback()
-    error=True
+    error_code=404
     print(sys.exc_info())
     flash('An error occurred. Artist ' + request.form.get('name') + ' could not be listed.')
   finally:
     db.session.close()
 
-  if error:
-    abort(400)
+  if error_code:
+    abort(error_code)
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
 
@@ -638,7 +638,7 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-  error = False
+  error_code = None
 
   try:
     venue_id = request.form.get('venue_id')
@@ -658,16 +658,21 @@ def create_show_submission():
     db.session.commit()
 
     flash('Show was successfully listed!')
+  except AttributeError:
+    db.session.rollback()
+    error_code = 404
+    print(sys.exc_info())
+    flash('An error occurred. Are you sure that the venue and artist IDs used exist?')
   except:
     db.session.rollback()
-    error=True
+    error_code = 500
     print(sys.exc_info())
     flash('An error occurred. Show could not be listed.')
   finally:
     db.session.close()
 
-  # if error:
-  #   abort(400)
+  if error_code:
+    abort(error_code)
 
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
