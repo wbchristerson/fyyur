@@ -167,9 +167,6 @@ def venues():
 
   for venue in all_venues:
     num_upcoming_shows = Show.query.filter(Show.venue_id==venue.id, Show.start_time > datetime.now()).count()
-    print()
-    print("num:", num_upcoming_shows)
-    print()
     if len(data) == 0 or data[-1]["city"] != venue.city:
       data.append({ "city": venue.city, "state": venue.state, "venues": [] })
     data[-1]["venues"].append({ "id": venue.id, "name": venue.name,
@@ -360,16 +357,24 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
   # TODO: replace with real data returned from querying the database
-  data=[{
-    "id": 4,
-    "name": "Guns N Petals",
-  }, {
-    "id": 5,
-    "name": "Matt Quevedo",
-  }, {
-    "id": 6,
-    "name": "The Wild Sax Band",
-  }]
+
+  all_artists = Artist.query.order_by(Artist.name).all()
+
+  data = []
+
+  for artist in all_artists:
+    data.append({ "id": artist.id, "name": artist.name })
+
+  # data=[{
+  #   "id": 4,
+  #   "name": "Guns N Petals",
+  # }, {
+  #   "id": 5,
+  #   "name": "Matt Quevedo",
+  # }, {
+  #   "id": 6,
+  #   "name": "The Wild Sax Band",
+  # }]
   return render_template('pages/artists.html', artists=data)
 
 @app.route('/artists/search', methods=['POST'])
