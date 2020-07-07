@@ -104,8 +104,8 @@ class Show(db.Model):
   start_time = db.Column(db.DateTime, nullable=False)
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
   artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
-  artist = db.relationship("Artist", db.backref("artists"))
-  venue = db.relationship("Venue", db.backref("venues"))
+  artist = db.relationship("Artist", backref = "artists")
+  venue = db.relationship("Venue", backref="venues")
 
   # venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
   # artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
@@ -604,63 +604,23 @@ def create_shows():
 def create_show_submission():
   error = False
 
-  # shows = db.Table('shows',
-  #                  db.Column('id', db.Integer, primary_key=True),
-  #                  db.Column('start_time', db.DateTime, nullable=False),
-  #                  db.Column('venue_id', db.Integer, db.ForeignKey('venue.id')),
-  #                  db.Column('artist_id', db.Integer, db.ForeignKey('artist.id')))
-
-
-  # class Show(db.Model):
-  #   __tablename__ = 'shows'
-  # id = db.Column(db.Integer, primary_key=True)
-  # start_time = db.Column(db.DateTime, nullable=False)
-  # venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
-  # artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
-  # artist = db.relationship("Artist", db.backref("artists"))
-  # venue = db.relationship("Venue", db.backref("venue"))
-
   try:
-    # show = Shows(
-    #   start_time=request.form.get('start_time'),
-    #   venue_id=request.form.get('venue_id'),
-    #   artist_id=request.form.get('artist_id')
-    # )
-    #
+    venue_id = request.form.get('venue_id')
+    artist_id = request.form.get('artist_id')
     show = Show(
-      venue_id=request.form.get('venue_id'),
-      artist_id=request.form.get('artist_id'),
+      venue_id=venue_id,
+      artist_id=artist_id,
       start_time=request.form.get('start_time')
     )
     venue = Venue.query.get(venue_id)
     artist = Artist.query.get(artist_id)
 
-    show.show_artist.append(artist)
+    show.show_artist = artist
     venue.artists.append(show)
 
-
-    # venue = Venue.query.get(request.form.get('venue_id'))
-    # artist = Artist.query.get(request.form.get('artist_id'))
-    # venue.artist_shows.append(artist)
-    # artist.venue_shows.append(venue)
-
-    # venue = Venue(
-    #   name=request.form.get('name'),
-    #   city = request.form.get('city'),
-    #   state = request.form.get('state'),
-    #   address = request.form.get('address'),
-    #   phone = request.form.get('phone'),
-    #   facebook_link = request.form.get('facebook_link')
-    # )
-
     db.session.add(show)
-    # db.session.add(venue)
     db.session.commit()
 
-    # for genre in genre_list:
-    #   db.session.add(VenueGenre(venue_id=venue.id, name=genre))
-    # db.session.commit()
-    # on successful db insert, flash success
     flash('Show was successfully listed!')
   except:
     db.session.rollback()
