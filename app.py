@@ -204,14 +204,27 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  #
+  venue_matches = Venue.query.filter(Venue.name.ilike(f'%{request.form.get("search_term", "")}%')).all()
+
+  search_responses = [{"id": v.id, "name": v.name} for v in venue_matches]
+  search_counts = []
+  for s in search_responses:
+    search_counts.append(Show.query.filter(Show.venue_id == s["id"], Show.start_time > datetime.now()).count())
+
+  response = {
+    "count": len(venue_matches),
+    "data": [{"id": vm["id"], "name": vm["name"], "num_upcoming_shows": sc} for (vm, sc) in zip(search_responses, search_counts)]
   }
+
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
@@ -382,14 +395,28 @@ def search_artists():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+
+  artist_matches = Artist.query.filter(Artist.name.ilike(f'%{request.form.get("search_term", "")}%')).all()
+
+  search_responses = [{"id": a.id, "name": a.name} for a in artist_matches]
+  search_counts = []
+  for s in search_responses:
+    search_counts.append(Show.query.filter(Show.artist_id == s["id"], Show.start_time > datetime.now()).count())
+
+  response = {
+    "count": len(artist_matches),
+    "data": [{"id": am["id"], "name": am["name"], "num_upcoming_shows": sc} for (am, sc) in zip(search_responses, search_counts)]
   }
+
+
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 4,
+  #     "name": "Guns N Petals",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
