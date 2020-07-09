@@ -244,6 +244,11 @@ def show_venue(venue_id):
     venue = Venue.query.get(venue_id)
     genres = VenueGenre.query.filter(VenueGenre.venue_id==venue.id).all()
     past_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
+
+    print("\n\n")
+    print(type(past_shows))
+    print("\n\n")
+
     upcoming_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time > datetime.now()).all()
 
     data["id"] = venue_id
@@ -261,6 +266,7 @@ def show_venue(venue_id):
     data["past_shows"] = [get_show_data(show_record) for show_record in past_shows]
     data["upcoming_shows"] = [get_show_data(show_record) for show_record in upcoming_shows]
     data["past_shows_count"] = len(past_shows),
+    # data["past_shows_count"] = past_shows_count
     data["upcoming_shows_count"] = len(upcoming_shows),
   except AttributeError:
     db.session.rollback()
