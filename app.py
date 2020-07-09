@@ -51,7 +51,7 @@ class Venue(db.Model):
     # Add-ons
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, default=True)
-    seeking_description = db.Column(db.String(500))
+    seeking_description = db.Column(db.String(500), default="")
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class=list, cascade="all, delete-orphan")
 
@@ -227,6 +227,14 @@ def search_venues():
   # }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
+def get_show_data(show_record):
+  return {
+    "artist_id": show_record.artist_id,
+    "artist_name": show_record.artist.name,
+    "artist_image_link": show_record.artist.image_link,
+    "start_time": str(show_record.start_time)
+  }
+
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   error_code = None
@@ -234,57 +242,36 @@ def show_venue(venue_id):
 
   try:
     venue = Venue.query.get(venue_id)
+    genres = VenueGenre.query.filter(VenueGenre.venue_id==venue.id).all()
+    past_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
+    upcoming_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time > datetime.now()).all()
 
     data["id"] = venue_id
-    data["name"] venue.name
-    #   "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
+    data["name"] = venue.name
+    data["genres"] = [g.name for g in genres]
     data["address"] = venue.address
     data["city"] = venue.city
     data["state"] = venue.state
     data["phone"] = venue.phone
     data["website"] = venue.website
     data["facebook_link"] = venue.facebook_link
-    #   "seeking_talent": True,
-    #   "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    #   "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60", # A
-    #   "past_shows": [{
-    #     "artist_id": 4,
-    #     "artist_name": "Guns N Petals",
-    #     "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-    #     "start_time": "2019-05-21T21:30:00.000Z"
-    #   }],
-    #   "upcoming_shows": [],
-    #   "past_shows_count": 1,
-    #   "upcoming_shows_count": 0,
-
-
-    # venue_id = request.form.get('venue_id')
-    # artist_id = request.form.get('artist_id')
-    # show = Show(
-    #   venue_id=venue_id,
-    #   artist_id=artist_id,
-    #   start_time=request.form.get('start_time')
-    # )
-    # venue = Venue.query.get(venue_id)
-    # artist = Artist.query.get(artist_id)
-    #
-    # show.show_artist = artist
-    # venue.artists.append(show)
-    #
-    # db.session.add(show)
-    # db.session.commit()
-    #
-    # flash('Show was successfully listed!')
+    data["seeking_talent"] = venue.seeking_talent
+    data["seeking_description"] = venue.seeking_description,
+    data["image_link"] = venue.image_link,
+    data["past_shows"] = [get_show_data(show_record) for show_record in past_shows]
+    data["upcoming_shows"] = [get_show_data(show_record) for show_record in upcoming_shows]
+    data["past_shows_count"] = len(past_shows),
+    data["upcoming_shows_count"] = len(upcoming_shows),
   except AttributeError:
     db.session.rollback()
     error_code = 404
     print(sys.exc_info())
-    flash('An error occurred. Are you sure that the venue and artist IDs used exist?')
+    flash('An error occurred. Are you sure that the venue has all attributes?')
   except:
     db.session.rollback()
     error_code = 500
     print(sys.exc_info())
-    flash('An error occurred. Show could not be listed.')
+    flash('An error occurred. The venue could not be displayed.')
   finally:
     db.session.close()
 
