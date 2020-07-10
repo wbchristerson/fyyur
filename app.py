@@ -235,21 +235,39 @@ def get_show_data(show_record):
     "start_time": str(show_record.start_time)
   }
 
+
+# # flatten tuple entries (x,) to x
+# def flatten_response(orm_response):
+#   flat_response = {}
+#   print("\n\n")
+#   print("orm_response:", orm_response)
+#   for k, (v,) in orm_response.items():
+#     print("k:", k)
+#     print("v:", v)
+#     print()
+#     flat_response[k] = v
+#   return flat_response
+
+
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
   error_code = None
   data = {}
 
   try:
+    # venue = flatten_response(Venue.query.get(venue_id))
     venue = Venue.query.get(venue_id)
     genres = VenueGenre.query.filter(VenueGenre.venue_id==venue.id).all()
     past_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
 
-    print("\n\n")
-    print(type(past_shows))
-    print("\n\n")
+    # print("\n\n")
+    # print(type(past_shows))
+    # print("type(venue_id):", type(venue_id))
+    # print("image_link:", venue.image_link)
+    # print("past_shows:", past_shows)
+    # print("\n\n")
 
-    upcoming_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time > datetime.now()).all()
+    upcoming_shows = Show.query.filter(Show.venue_id == venue_id, Show.start_time > datetime.now()).all()
 
     data["id"] = venue_id
     data["name"] = venue.name
@@ -261,13 +279,16 @@ def show_venue(venue_id):
     data["website"] = venue.website
     data["facebook_link"] = venue.facebook_link
     data["seeking_talent"] = venue.seeking_talent
-    data["seeking_description"] = venue.seeking_description,
-    data["image_link"] = venue.image_link,
+    data["seeking_description"], = venue.seeking_description,
+
+    data["image_link"], = venue.image_link,
+    if data["image_link"] is None:
+      data["image_link"] = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Vienna_-_Vienna_Opera_main_auditorium_-_9825.jpg"
+
     data["past_shows"] = [get_show_data(show_record) for show_record in past_shows]
     data["upcoming_shows"] = [get_show_data(show_record) for show_record in upcoming_shows]
-    data["past_shows_count"] = len(past_shows),
-    # data["past_shows_count"] = past_shows_count
-    data["upcoming_shows_count"] = len(upcoming_shows),
+    data["past_shows_count"] = len(past_shows)
+    data["upcoming_shows_count"] = len(upcoming_shows)
   except AttributeError:
     db.session.rollback()
     error_code = 404
@@ -419,6 +440,34 @@ def create_venue_submission():
 def delete_venue(venue_id):
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+
+  error_code = None
+
+  try:
+    
+
+    genre_list = request.form.getlist('genres')
+    db.session.add(venue)
+    db.session.commit()
+
+    for genre in genre_list:
+      db.session.add(VenueGenre(venue_id=venue.id, name=genre))
+    db.session.commit()
+    # on successful db insert, flash success
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  except:
+    db.session.rollback()
+    error_code=404
+    print(sys.exc_info())
+    flash('An error occurred. Venue ' + request.form.get('name') + ' could not be listed.')
+  finally:
+    db.session.close()
+
+  if error_code:
+    abort(error_code)
+
+  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  return redirect(url_for('index'))
 
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
