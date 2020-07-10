@@ -279,7 +279,10 @@ def show_venue(venue_id):
     data["website"] = venue.website
     data["facebook_link"] = venue.facebook_link
     data["seeking_talent"] = venue.seeking_talent
+
     data["seeking_description"], = venue.seeking_description,
+    if data["seeking_description"] is None:
+      data["seeking_description"] = ""
 
     data["image_link"], = venue.image_link,
     if data["image_link"] is None:
@@ -444,22 +447,19 @@ def delete_venue(venue_id):
   error_code = None
 
   try:
-    
-
-    genre_list = request.form.getlist('genres')
-    db.session.add(venue)
+    Venue.query.filter(Venue.id==venue_id).delete()
     db.session.commit()
-
-    for genre in genre_list:
-      db.session.add(VenueGenre(venue_id=venue.id, name=genre))
-    db.session.commit()
-    # on successful db insert, flash success
-    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+    flash('The venue with id ' + venue_id + ' was successfully deleted.')
+  except AttributeError:
+    db.session.rollback()
+    error_code = 404
+    print(sys.exc_info())
+    flash('An error occurred. Are you sure that the venue has all attributes?')
   except:
     db.session.rollback()
-    error_code=404
+    error_code = 500
     print(sys.exc_info())
-    flash('An error occurred. Venue ' + request.form.get('name') + ' could not be listed.')
+    flash('An error occurred. The venue could not be displayed.')
   finally:
     db.session.close()
 
