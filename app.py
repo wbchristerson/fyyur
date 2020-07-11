@@ -53,9 +53,11 @@ class Venue(db.Model):
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500), default="")
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
-                               collection_class=list, cascade="all, delete-orphan")
+                               collection_class=list,
+                               cascade="all, delete, delete-orphan"
+                              )
 
-    artists = db.relationship("Show", backref="show_venue")
+    venue_shows = db.relationship("Show", backref="show_venue")
     # artist_shows = db.relationship('Artist_Shows', secondary=shows,
     #                                backref=db.backref('venue', lazy=True))
 
@@ -96,8 +98,10 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(500))
 
     children = db.relationship('ArtistGenre', backref="artist", lazy=True,
-                               collection_class=list, cascade="all, delete-orphan")
-    venue = db.relationship("Show", backref="show_artist")
+                               collection_class=list,
+                               # cascade="all, delete-orphan"
+                              )
+    artist_shows = db.relationship("Show", backref="show_artist")
 
 class Show(db.Model):
   __tablename__ = 'shows'
@@ -105,8 +109,8 @@ class Show(db.Model):
   start_time = db.Column(db.DateTime, nullable=False)
   venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
   artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
-  artist = db.relationship("Artist", backref = "artists")
-  venue = db.relationship("Venue", backref="venues")
+  # artist = db.relationship("Artist", backref = "artists", single_parent=True, cascade="all, delete-orphan")
+  # venue = db.relationship("Venue", backref="venues", single_parent=True, cascade="all, delete-orphan")
 
   # venue = db.relationship(Venue, backref=db.backref("shows", cascade="all, delete-orphan"))
   # artist = db.relationship(Artist, backref=db.backref("shows", cascade="all, delete-orphan"))
@@ -230,8 +234,8 @@ def search_venues():
 def get_show_data(show_record):
   return {
     "artist_id": show_record.artist_id,
-    "artist_name": show_record.artist.name,
-    "artist_image_link": show_record.artist.image_link,
+    "artist_name": show_record.show_artist.name,
+    "artist_image_link": show_record.show_artist.image_link,
     "start_time": str(show_record.start_time)
   }
 
@@ -469,9 +473,9 @@ def delete_venue(venue_id):
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
 
-  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-  # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  # # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
+  # # clicking that button delete it from the db then redirect the user to the homepage
+  # return None
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -720,10 +724,15 @@ def shows():
   for show in all_shows:
     data.append({
       "venue_id": show.venue_id,
-      "venue_name": show.venue.name,
+      # "venue_name": show.venue.name,
+      "venue_name": "The VNNUYE",
       "artist_id": show.artist_id,
-      "artist_name": show.artist.name,
-      "artist_image_link": show.artist.image_link,
+      # "artist_name": show.artist.name,
+      "artist_name": "HINGERH HIN ER HINGER GINGER DINGER GINGR HINGER",
+
+      # "artist_image_link": show.artist.image_link,
+      "artist_image_link": "https://i.ytimg.com/vi/1yBwWLunlOM/maxresdefault.jpg",
+      
       "start_time": str(show.start_time)
     })
 
