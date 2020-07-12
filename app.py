@@ -33,6 +33,9 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 
+DEFAULT_ARTIST_IMAGE = "https://artcentereast.org/wp-content/uploads/2017/07/8415275-Artist-s-palette-with-paintbrushes-isolated-over-white-background-With-clipping-path-Stock-Photo.jpg"
+DEFAULT_VENUE_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Vienna_-_Vienna_Opera_main_auditorium_-_9825.jpg"
+
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
@@ -70,11 +73,11 @@ class Artist(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=True)
+    seeking_venue = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500))
     children = db.relationship('ArtistGenre', backref="artist", lazy=True,
                                collection_class=list,
-                               cascade="all, delete-orphan"
+                               cascade="all, delete, delete-orphan"
                               )
     artist_shows = db.relationship("Show", backref="show_artist", cascade="all, delete, delete-orphan")
 
@@ -141,7 +144,7 @@ def venues():
       data.append({ "city": venue.city, "state": venue.state, "venues": [] })
     data[-1]["venues"].append({ "id": venue.id, "name": venue.name,
                              "num_upcoming_shows": num_upcoming_shows})
-  return render_template('pages/venues.html', areas=data);
+  return render_template('pages/venues.html', areas=data)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -164,11 +167,14 @@ def search_venues():
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 
-def get_show_data(show_record):
+def get_venue_show_data(show_record):
+  displayed_artist_image_link = show_record.show_artist.image_link
+  if displayed_artist_image_link is None:
+    displayed_artist_image_link = DEFAULT_ARTIST_IMAGE
   return {
     "artist_id": show_record.artist_id,
     "artist_name": show_record.show_artist.name,
-    "artist_image_link": show_record.show_artist.image_link,
+    "artist_image_link": displayed_artist_image_link,
     "start_time": str(show_record.start_time)
   }
 
@@ -182,7 +188,7 @@ def show_venue(venue_id):
     venue = Venue.query.get(venue_id)
     genres = VenueGenre.query.filter(VenueGenre.venue_id==venue.id).all()
     past_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
-    upcoming_shows = Show.query.filter(Show.venue_id == venue_id, Show.start_time > datetime.now()).all()
+    upcoming_shows = Show.query.filter(Show.venue_id == venue_id, Show.start_time >= datetime.now()).all()
 
     data["id"] = venue_id
     data["name"] = venue.name
@@ -201,10 +207,10 @@ def show_venue(venue_id):
 
     data["image_link"], = venue.image_link,
     if data["image_link"] is None:
-      data["image_link"] = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Vienna_-_Vienna_Opera_main_auditorium_-_9825.jpg"
+      data["image_link"] = DEFAULT_VENUE_IMAGE
 
-    data["past_shows"] = [get_show_data(show_record) for show_record in past_shows]
-    data["upcoming_shows"] = [get_show_data(show_record) for show_record in upcoming_shows]
+    data["past_shows"] = [get_venue_show_data(show_record) for show_record in past_shows]
+    data["upcoming_shows"] = [get_venue_show_data(show_record) for show_record in upcoming_shows]
     data["past_shows_count"] = len(past_shows)
     data["upcoming_shows_count"] = len(upcoming_shows)
   except AttributeError:
@@ -323,83 +329,73 @@ def search_artists():
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 
+def get_artist_show_data(show_record):
+  displayed_venue_image_link = show_record.show_artist.image_link
+  if displayed_venue_image_link is None:
+    displayed_venue_image_link = DEFAULT_VENUE_IMAGE
+  return {
+    "venue_id": show_record.venue_id,
+    "venue_name": show_record.show_venue.name,
+    "venue_image_link": displayed_venue_image_link,
+    "start_time": str(show_record.start_time),
+  }
+
+
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-  # shows the venue page with the given venue_id
-  # TODO: replace with real venue data from the venues table, using venue_id
-  data1={
-    "id": 4,
-    "name": "Guns N Petals",
-    "genres": ["Rock n Roll"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "326-123-5000",
-    "website": "https://www.gunsnpetalsband.com",
-    "facebook_link": "https://www.facebook.com/GunsNPetals",
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-    "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-    "past_shows": [{
-      "venue_id": 1,
-      "venue_name": "The Musical Hop",
-      "venue_image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-      "start_time": "2019-05-21T21:30:00.000Z"
-    }],
-    "upcoming_shows": [],
-    "past_shows_count": 1,
-    "upcoming_shows_count": 0,
-  }
-  data2={
-    "id": 5,
-    "name": "Matt Quevedo",
-    "genres": ["Jazz"],
-    "city": "New York",
-    "state": "NY",
-    "phone": "300-400-5000",
-    "facebook_link": "https://www.facebook.com/mattquevedo923251523",
-    "seeking_venue": False,
-    "image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-    "past_shows": [{
-      "venue_id": 3,
-      "venue_name": "Park Square Live Music & Coffee",
-      "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-      "start_time": "2019-06-15T23:00:00.000Z"
-    }],
-    "upcoming_shows": [],
-    "past_shows_count": 1,
-    "upcoming_shows_count": 0,
-  }
-  data3={
-    "id": 6,
-    "name": "The Wild Sax Band",
-    "genres": ["Jazz", "Classical"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "432-325-5432",
-    "seeking_venue": False,
-    "image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-    "past_shows": [],
-    "upcoming_shows": [{
-      "venue_id": 3,
-      "venue_name": "Park Square Live Music & Coffee",
-      "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-      "start_time": "2035-04-01T20:00:00.000Z"
-    }, {
-      "venue_id": 3,
-      "venue_name": "Park Square Live Music & Coffee",
-      "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-      "start_time": "2035-04-08T20:00:00.000Z"
-    }, {
-      "venue_id": 3,
-      "venue_name": "Park Square Live Music & Coffee",
-      "venue_image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-      "start_time": "2035-04-15T20:00:00.000Z"
-    }],
-    "past_shows_count": 0,
-    "upcoming_shows_count": 3,
-  }
-  data = list(filter(lambda d: d['id'] == artist_id, [data1, data2, data3]))[0]
-  return render_template('pages/show_artist.html', artist=data)
+  error_code = None
+  data = {}
+
+  try:
+    artist = Artist.query.get(artist_id)
+
+    if artist is None:
+      error_code = 404
+    else:
+      genres = ArtistGenre.query.filter(ArtistGenre.artist_id==artist.id).all()
+      past_shows = Show.query.filter(Show.artist_id == artist_id, Show.start_time < datetime.now()).all()
+      upcoming_shows = Show.query.filter(Show.artist_id == artist_id, Show.start_time >= datetime.now()).all()
+
+      data["id"] = artist_id
+      data["name"] = artist.name
+      data["genres"] = [g.name for g in genres]
+      data["city"] = artist.city
+      data["state"] = artist.state
+      data["phone"] = artist.phone
+      data["website"] = artist.website
+      data["facebook_link"] = artist.facebook_link
+      data["seeking_venue"] = artist.seeking_venue
+
+      data["seeking_description"], = artist.seeking_description,
+      if data["seeking_description"] is None:
+        data["seeking_description"] = ""
+
+      data["image_link"], = artist.image_link,
+      if data["image_link"] is None:
+        data["image_link"] = DEFAULT_ARTIST_IMAGE
+
+      data["past_shows"] = [get_artist_show_data(show_record) for show_record in past_shows]
+      data["upcoming_shows"] = [get_artist_show_data(show_record) for show_record in upcoming_shows]
+      data["past_shows_count"] = len(past_shows)
+      data["upcoming_shows_count"] = len(upcoming_shows)
+  except AttributeError:
+    db.session.rollback()
+    error_code = 404
+    print(sys.exc_info())
+    flash('An error occurred. Are you sure that the artist exists and has all attributes?')
+  except:
+    db.session.rollback()
+    error_code = 500
+    print(sys.exc_info())
+    flash('An error occurred. The artist could not be displayed.')
+  finally:
+    db.session.close()
+
+  if error_code:
+    abort(error_code)
+  else:
+    return render_template('pages/show_artist.html', artist=data)
+
 
 #  Update
 #  ----------------------------------------------------------------
