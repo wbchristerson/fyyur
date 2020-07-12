@@ -7,7 +7,6 @@ import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
-from wtforms import SelectMultipleField
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
@@ -29,13 +28,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
-
-# TODO: connect to a local postgresql database - DONE
-
 migrate = Migrate(app, db)
 
 DEFAULT_ARTIST_IMAGE = "https://artcentereast.org/wp-content/uploads/2017/07/8415275-Artist-s-palette-with-paintbrushes-isolated-over-white-background-With-clipping-path-Stock-Photo.jpg"
 DEFAULT_VENUE_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/e/e8/Vienna_-_Vienna_Opera_main_auditorium_-_9825.jpg"
+DEFAULT_SHOW_IMAGE = "https://i.ytimg.com/vi/1yBwWLunlOM/maxresdefault.jpg"
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -116,7 +113,7 @@ class ArtistGenre(db.Model):
 def format_datetime(value, format='medium'):
   date = dateutil.parser.parse(value)
   if format == 'full':
-      format="EEEE MMMM, d, y 'at' h:mma"
+      format="EEEE MMMM d, y 'at' h:mma"
   elif format == 'medium':
       format="EE MM, dd, y h:mma"
   return babel.dates.format_datetime(date, format)
@@ -553,7 +550,6 @@ def create_artist_submission():
 
   if error_code:
     abort(error_code)
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
 
 
@@ -562,72 +558,26 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-
   all_shows = Show.query.all()
-
   data = []
-
   for show in all_shows:
     data.append({
       "venue_id": show.venue_id,
-      # "venue_name": show.venue.name,
-      "venue_name": "The VNNUYE",
+      "venue_name": show.show_venue.name,
       "artist_id": show.artist_id,
-      # "artist_name": show.artist.name,
-      "artist_name": "HINGERH HIN ER HINGER GINGER DINGER GINGR HINGER",
-
-      # "artist_image_link": show.artist.image_link,
-      "artist_image_link": "https://i.ytimg.com/vi/1yBwWLunlOM/maxresdefault.jpg",
-      
+      "artist_name": show.show_artist.name,
+      "artist_image_link": show.show_artist.image_link if show.show_artist.image_link else DEFAULT_SHOW_IMAGE,
       "start_time": str(show.start_time)
     })
-
-  # data = [{
-  #   "venue_id": 1,
-  #   "venue_name": "The Musical Hop",
-  #   "artist_id": 4,
-  #   "artist_name": "Guns N Petals",
-  #   "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-  #   "start_time": "2019-05-21T21:30:00.000Z"
-  # }, {
-  #   "venue_id": 3,
-  #   "venue_name": "Park Square Live Music & Coffee",
-  #   "artist_id": 5,
-  #   "artist_name": "Matt Quevedo",
-  #   "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-  #   "start_time": "2019-06-15T23:00:00.000Z"
-  # }, {
-  #   "venue_id": 3,
-  #   "venue_name": "Park Square Live Music & Coffee",
-  #   "artist_id": 6,
-  #   "artist_name": "The Wild Sax Band",
-  #   "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-  #   "start_time": "2035-04-01T20:00:00.000Z"
-  # }, {
-  #   "venue_id": 3,
-  #   "venue_name": "Park Square Live Music & Coffee",
-  #   "artist_id": 6,
-  #   "artist_name": "The Wild Sax Band",
-  #   "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-  #   "start_time": "2035-04-08T20:00:00.000Z"
-  # }, {
-  #   "venue_id": 3,
-  #   "venue_name": "Park Square Live Music & Coffee",
-  #   "artist_id": 6,
-  #   "artist_name": "The Wild Sax Band",
-  #   "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-  #   "start_time": "2035-04-15T20:00:00.000Z"
-  # }]
   return render_template('pages/shows.html', shows=data)
+
 
 @app.route('/shows/create')
 def create_shows():
   # renders form. do not touch.
   form = ShowForm()
   return render_template('forms/new_show.html', form=form)
+
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
@@ -641,15 +591,8 @@ def create_show_submission():
       artist_id=artist_id,
       start_time=request.form.get('start_time')
     )
-    # venue = Venue.query.get(venue_id)
-    # artist = Artist.query.get(artist_id)
-
-    # show.show_artist = artist
-    # venue.artists.append(show)
-
     db.session.add(show)
     db.session.commit()
-
     flash('Show was successfully listed!')
   except AttributeError:
     db.session.rollback()
@@ -663,17 +606,15 @@ def create_show_submission():
     flash('An error occurred. Show could not be listed.')
   finally:
     db.session.close()
-
   if error_code:
     abort(error_code)
-
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
   return redirect(url_for('index'))
 
 
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
+
 
 @app.errorhandler(500)
 def server_error(error):
