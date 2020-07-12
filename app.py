@@ -7,6 +7,7 @@ import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
+from wtforms import SelectMultipleField
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
@@ -403,27 +404,17 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
   form = ArtistForm()
   error_code = None
-  edited_artist = {}
-
   try:
     artist = Artist.query.get(artist_id)
     if artist is None:
       error_code = 404
     else:
-      edited_artist["id"] = artist.id
-      edited_artist["name"] = artist.name
-
-      genres = ArtistGenre.query.filter(ArtistGenre.artist_id==artist.id).all()
-      edited_artist["genres"] = [g.name for g in genres]
-
-      edited_artist["city"] = artist.city
-      edited_artist["state"] = artist.state
-      edited_artist["phone"] = artist.phone
-      edited_artist["website"] = artist.website
-      edited_artist["facebook_link"] = artist.facebook_link
-      edited_artist["seeking_venue"] = artist.seeking_venue
-      edited_artist["seeking_description"] = artist.seeking_description
-      edited_artist["image_link"] = artist.image_link
+      matching_genres = ArtistGenre.query.filter(ArtistGenre.artist_id==artist_id).all()
+      matching_genres_arr = [g.name for g in matching_genres]
+      form = ArtistForm(name=artist.name, city=artist.city, state=artist.state,
+                        image_link=artist.image_link,
+                        genres=matching_genres_arr,
+                        phone=artist.phone, facebook_link=artist.facebook_link)
   except AttributeError:
     db.session.rollback()
     error_code = 404
@@ -440,27 +431,17 @@ def edit_artist(artist_id):
   if error_code:
     abort(error_code)
   else:
-    return render_template('forms/edit_artist.html', form=form, artist=edited_artist)
+    return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
   artist = Artist.query.get(artist_id)
-
-  if request.form.get("name", None):
-    artist.name = request.form.get("name")
-
-  if request.form.get("city", None):
-    artist.city = request.form.get("city")
-
-  if request.form.get("state", None):
-    artist.state = request.form.get("state")
-
-  if request.form.get("phone", None):
-    artist.phone = request.form.get("phone")
-
-  if request.form.get("facebook_link", None):
-    artist.facebook_link = request.form.get("facebook_link")
+  artist.name = request.form.get("name")
+  artist.city = request.form.get("city")
+  artist.state = request.form.get("state")
+  artist.phone = request.form.get("phone")
+  artist.facebook_link = request.form.get("facebook_link")
 
   updated_genres = request.form.getlist('genres')
   if updated_genres is not None and len(updated_genres) > 0:
@@ -478,22 +459,32 @@ def edit_artist_submission(artist_id):
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
   form = VenueForm()
-  venue={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-  }
-  # TODO: populate form with values from venue with ID <venue_id>
-  return render_template('forms/edit_venue.html', form=form, venue=venue)
+  error_code = None
+
+  try:
+    venue = Venue.query.get(venue_id)
+    if venue is None:
+      error_code = 404
+    else:
+      form = VenueForm(obj=venue)
+  except AttributeError:
+    db.session.rollback()
+    error_code = 404
+    print(sys.exc_info())
+    flash('An error occurred. Are you sure that the venue exists and has all attributes?')
+  except:
+    db.session.rollback()
+    error_code = 500
+    print(sys.exc_info())
+    flash('An error occurred. The venue could not be displayed.')
+  finally:
+    db.session.close()
+
+  if error_code:
+    abort(error_code)
+  else:
+    return render_template('forms/edit_venue.html', form=form, venue=venue)
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):

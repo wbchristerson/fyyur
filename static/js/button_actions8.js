@@ -23,22 +23,30 @@ const onArtistEditClick = function(e) {
         method: 'GET',
     })
     .then((data) => {
-        console.log("data.response: ", data.url);
         window.location.href = data.url;
     })
     .catch((error) => error);
-
-    // fetch('/venues/' + venueId, {
-    //     method: 'DELETE',
-    // })
-    //     .then(() => {
-    //         window.location.href="/";
-    //     })
-    //     .catch((error) => error);
-    // console.log(e);
 };
 
 const artistEditButton = document.getElementById("edit-artist");
 if (artistEditButton) {
     artistEditButton.onclick = onArtistEditClick;
+}
+
+
+const onVenueEditClick = function(e) {
+    e.preventDefault();
+    const venueId = e.target.dataset.id;
+    fetch('/venues/' + venueId + '/edit', {
+        method: 'GET',
+    })
+    .then((data) => {
+        window.location.href = data.url;
+    })
+    .catch((error) => error);
+};
+
+const venueEditButton = document.getElementById("edit-venue");
+if (venueEditButton) {
+    venueEditButton.onclick = onVenueEditClick;
 }
