@@ -407,7 +407,6 @@ def edit_artist(artist_id):
 
   try:
     artist = Artist.query.get(artist_id)
-
     if artist is None:
       error_code = 404
     else:

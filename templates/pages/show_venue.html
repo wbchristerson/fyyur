@@ -46,7 +46,7 @@
 		<img src="{{ venue.image_link }}" alt="Venue Image" />
 	</div>
 	<div>
-		<button id="delete-button" type="button" data-id="{{ venue.id }}">DELETE</button>
+		<button id="delete-button" type="button" data-id="{{ venue.id }}">DELETE {{ venue.name.upper() }}</button>
 	</div>
 </div>
 <section>

@@ -147,10 +147,10 @@ p > i {
   font-weight: bold;
   background: #ffffc6;
 }
-
 .seeking > button {
   margin-left: 15px;
 }
+
 .description {
   max-width: 450px;
 }
@@ -208,4 +208,15 @@ h2.monospace {
 }
 .subtitle {
   opacity: 0.5;
+}
+#delete-button {
+  background: #ff5c50;
+  margin-left: 15px;
+  margin-top: 20px;
+  padding: 10px;
+  box-shadow: 4px 2px 2px black;
+}
+#delete-button:hover {
+  box-shadow: 6px 3px 3px black;
+  background: #ff000e;
 }
