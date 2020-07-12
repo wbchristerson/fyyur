@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -52,10 +52,19 @@ class Venue(db.Model):
     website = db.Column(db.String(120), nullable=True)
     seeking_talent = db.Column(db.Boolean, default=True)
     seeking_description = db.Column(db.String(500), default="")
+
+
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
-                               collection_class=list,
-                               cascade="all, delete, delete-orphan"
-                              )
+                               collection_class=list, cascade="all, delete, delete-orphan")
+
+
+
+    # children = db.relationship('VenueGenre', backref="venue", lazy=True,
+    #                            collection_class=list,
+    #                            # cascade="all, delete, delete-orphan"
+    #                            # cascade="save-update, merge, delete"
+    #                            cascade="all, delete-orphan"
+    #                            )
 
     venue_shows = db.relationship("Show", backref="show_venue")
     # artist_shows = db.relationship('Artist_Shows', secondary=shows,
@@ -79,7 +88,7 @@ class Venue(db.Model):
     #   return ",\n".join(repr_arr)
 
     def __repr__ (self):
-      return f'<Venue %r>' % self.name;
+      return f'<Venue %r>' % self.name
 
 class Artist(db.Model):
     __tablename__ = 'artist'
@@ -451,7 +460,12 @@ def delete_venue(venue_id):
   error_code = None
 
   try:
-    Venue.query.filter(Venue.id==venue_id).delete()
+    venue_match = Venue.query.filter(Venue.id==venue_id).first()
+    db.session.delete(venue_match)
+
+    # first_genre = VenueGenre.query.filter(VenueGenre.venue_id==venue_id).first()
+    # db.session.delete(first_genre)
+
     db.session.commit()
     flash('The venue with id ' + venue_id + ' was successfully deleted.')
   except AttributeError:
@@ -471,7 +485,8 @@ def delete_venue(venue_id):
     abort(error_code)
 
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return redirect(url_for('index'))
+  return jsonify({ 'success': True })
+  # return redirect(url_for('index'))
 
   # # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # # clicking that button delete it from the db then redirect the user to the homepage
