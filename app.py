@@ -460,13 +460,17 @@ def edit_artist_submission(artist_id):
 def edit_venue(venue_id):
   form = VenueForm()
   error_code = None
-
   try:
     venue = Venue.query.get(venue_id)
     if venue is None:
       error_code = 404
     else:
-      form = VenueForm(obj=venue)
+      matching_genres = VenueGenre.query.filter(VenueGenre.venue_id==venue_id).all()
+      matching_genres_arr = [g.name for g in matching_genres]
+      form = VenueForm(name=venue.name, city=venue.city, state=venue.state,
+                       image_link=venue.image_link, genres=matching_genres_arr,
+                       phone=venue.phone, facebook_link=venue.facebook_link,
+                       address=venue.address)
   except AttributeError:
     db.session.rollback()
     error_code = 404
