@@ -220,3 +220,15 @@ h2.monospace {
   box-shadow: 6px 3px 3px black;
   background: #ff000e;
 }
+#edit-artist {
+  background: #7f8eff;
+  margin-left: 15px;
+  margin-top: 20px;
+  padding: 10px;
+  box-shadow: 4px 2px 2px black;
+}
+#edit-artist:hover {
+  box-shadow: 6px 3px 3px black;
+  background: #001dff;
+  color: #f8f1ff;
+}

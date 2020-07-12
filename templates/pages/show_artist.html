@@ -42,6 +42,9 @@
 	<div class="col-sm-6">
 		<img src="{{ artist.image_link }}" alt="Venue Image" />
 	</div>
+	<div>
+		<button id="edit-artist" type="button" data-id="{{ artist.id }}">EDIT {{ artist.name.upper() }}'S PAGE</button>
+	</div>
 </div>
 <section>
 	<h2 class="monospace">{{ artist.upcoming_shows_count }} Upcoming {% if artist.upcoming_shows_count == 1 %}Show{% else %}Shows{% endif %}</h2>

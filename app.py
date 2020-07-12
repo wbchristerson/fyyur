@@ -445,10 +445,35 @@ def edit_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-  # TODO: take values from the form submitted, and update existing
-  # artist record with ID <artist_id> using the new attributes
+  artist = Artist.query.get(artist_id)
 
+  if request.form.get("name", None):
+    artist.name = request.form.get("name")
+
+  if request.form.get("city", None):
+    artist.city = request.form.get("city")
+
+  if request.form.get("state", None):
+    artist.state = request.form.get("state")
+
+  if request.form.get("phone", None):
+    artist.phone = request.form.get("phone")
+
+  if request.form.get("facebook_link", None):
+    artist.facebook_link = request.form.get("facebook_link")
+
+  updated_genres = request.form.getlist('genres')
+  if updated_genres is not None and len(updated_genres) > 0:
+    matching_genre_pairs = ArtistGenre.query.filter(artist_id==artist_id).all()
+    for genre_pair in matching_genre_pairs:
+      db.session.delete(genre_pair)
+
+    for genre in updated_genres:
+      db.session.add(ArtistGenre(artist_id=artist_id, name=genre))
+
+  db.session.commit()
   return redirect(url_for('show_artist', artist_id=artist_id))
+
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
@@ -491,11 +516,11 @@ def create_artist_submission():
 
   try:
     artist = Artist(
-      name=request.form.get('name'),
-      city = request.form.get('city'),
-      state = request.form.get('state'),
-      phone = request.form.get('phone'),
-      facebook_link = request.form.get('facebook_link')
+      name=request.form.get('name',''),
+      city = request.form.get('city',''),
+      state = request.form.get('state',''),
+      phone = request.form.get('phone',''),
+      facebook_link = request.form.get('facebook_link','')
     )
 
     genre_list = request.form.getlist('genres')
