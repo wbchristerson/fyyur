@@ -53,7 +53,7 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String(500), default="")
     children = db.relationship('VenueGenre', backref="venue", lazy=True,
                                collection_class=list, cascade="all, delete, delete-orphan")
-    venue_shows = db.relationship("Show", backref="show_venue")
+    venue_shows = db.relationship("Show", backref="show_venue", cascade="all, delete, delete-orphan")
 
     def __repr__ (self):
       return f'<Venue %r>' % self.name
@@ -76,7 +76,7 @@ class Artist(db.Model):
                                collection_class=list,
                                cascade="all, delete-orphan"
                               )
-    artist_shows = db.relationship("Show", backref="show_artist")
+    artist_shows = db.relationship("Show", backref="show_artist", cascade="all, delete, delete-orphan")
 
 
 class Show(db.Model):
@@ -584,11 +584,11 @@ def create_show_submission():
       artist_id=artist_id,
       start_time=request.form.get('start_time')
     )
-    venue = Venue.query.get(venue_id)
-    artist = Artist.query.get(artist_id)
+    # venue = Venue.query.get(venue_id)
+    # artist = Artist.query.get(artist_id)
 
-    show.show_artist = artist
-    venue.artists.append(show)
+    # show.show_artist = artist
+    # venue.artists.append(show)
 
     db.session.add(show)
     db.session.commit()
