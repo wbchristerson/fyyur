@@ -402,21 +402,47 @@ def show_artist(artist_id):
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
   form = ArtistForm()
-  artist={
-    "id": 4,
-    "name": "Guns N Petals",
-    "genres": ["Rock n Roll"],
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "326-123-5000",
-    "website": "https://www.gunsnpetalsband.com",
-    "facebook_link": "https://www.facebook.com/GunsNPetals",
-    "seeking_venue": True,
-    "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-    "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-  }
-  # TODO: populate form with fields from artist with ID <artist_id>
-  return render_template('forms/edit_artist.html', form=form, artist=artist)
+  error_code = None
+  edited_artist = {}
+
+  try:
+    artist = Artist.query.get(artist_id)
+
+    if artist is None:
+      error_code = 404
+    else:
+      edited_artist["id"] = artist.id
+      edited_artist["name"] = artist.name
+
+      genres = ArtistGenre.query.filter(ArtistGenre.artist_id==artist.id).all()
+      edited_artist["genres"] = [g.name for g in genres]
+
+      edited_artist["city"] = artist.city
+      edited_artist["state"] = artist.state
+      edited_artist["phone"] = artist.phone
+      edited_artist["website"] = artist.website
+      edited_artist["facebook_link"] = artist.facebook_link
+      edited_artist["seeking_venue"] = artist.seeking_venue
+      edited_artist["seeking_description"] = artist.seeking_description
+      edited_artist["image_link"] = artist.image_link
+  except AttributeError:
+    db.session.rollback()
+    error_code = 404
+    print(sys.exc_info())
+    flash('An error occurred. Are you sure that the artist exists and has all attributes?')
+  except:
+    db.session.rollback()
+    error_code = 500
+    print(sys.exc_info())
+    flash('An error occurred. The artist could not be displayed.')
+  finally:
+    db.session.close()
+
+  if error_code:
+    abort(error_code)
+  else:
+    return render_template('forms/edit_artist.html', form=form, artist=edited_artist)
+
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
