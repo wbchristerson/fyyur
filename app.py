@@ -152,10 +152,6 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  #  seach for Hop should return "The Musical Hop".
-  #  search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  #
   venue_matches = Venue.query.filter(Venue.name.ilike(f'%{request.form.get("search_term", "")}%')).all()
 
   search_responses = [{"id": v.id, "name": v.name} for v in venue_matches]
@@ -190,8 +186,8 @@ def show_venue(venue_id):
   try:
     venue = Venue.query.get(venue_id)
     genres = VenueGenre.query.filter(VenueGenre.venue_id==venue.id).all()
-    past_shows = Show.query.filter(Show.venue_id == venue.id, Show.start_time < datetime.now()).all()
-    upcoming_shows = Show.query.filter(Show.venue_id == venue_id, Show.start_time >= datetime.now()).all()
+    past_shows = db.session.query(Show).join(Venue, Venue.id==Show.venue_id).filter(Venue.id==venue_id, Show.start_time < datetime.now()).all()
+    upcoming_shows = db.session.query(Show).join(Venue, Venue.id==Show.venue_id).filter(Venue.id==venue_id, Show.start_time >= datetime.now()).all()
 
     data["id"] = venue_id
     data["name"] = venue.name
