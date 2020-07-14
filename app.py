@@ -352,8 +352,8 @@ def show_artist(artist_id):
       error_code = 404
     else:
       genres = ArtistGenre.query.filter(ArtistGenre.artist_id==artist.id).all()
-      past_shows = Show.query.filter(Show.artist_id == artist_id, Show.start_time < datetime.now()).all()
-      upcoming_shows = Show.query.filter(Show.artist_id == artist_id, Show.start_time >= datetime.now()).all()
+      past_shows = db.session.query(Show).join(Artist, Artist.id==Show.artist_id).filter(Artist.id==artist_id, Show.start_time < datetime.now()).all()
+      upcoming_shows = db.session.query(Show).join(Artist, Artist.id==Show.artist_id).filter(Artist.id==artist_id, Show.start_time >= datetime.now()).all()
 
       data["id"] = artist_id
       data["name"] = artist.name
