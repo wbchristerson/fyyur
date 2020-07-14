@@ -39,7 +39,7 @@ DEFAULT_SHOW_IMAGE = "https://i.ytimg.com/vi/1yBwWLunlOM/maxresdefault.jpg"
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -61,7 +61,7 @@ class Venue(db.Model):
 
 
 class Artist(db.Model):
-    __tablename__ = 'artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -84,27 +84,32 @@ class Show(db.Model):
   __tablename__ = 'shows'
   id = db.Column(db.Integer, primary_key=True)
   start_time = db.Column(db.DateTime, nullable=False)
-  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'))
-  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'))
+  venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'))
+  artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'))
 
 
 # Is there a way to make these two genre classes extend a single Genre class without SQL-
 # Alchemy creating a database for that prototypical Genre class when calling 'flask db
 # migrate'?
 
-class VenueGenre(db.Model):
-  __tablename__ = 'venueGenre'
+class Genre(db.Model):
+  __abstract__ = True
   name = db.Column(db.String(20), primary_key=True)
-  venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False, primary_key=True)
+
+
+class VenueGenre(Genre):
+  __tablename__ = 'venueGenres'
+  # name = db.Column(db.String(20), primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False, primary_key=True)
 
   def __repr__(self):
     return f'<VenueGenre {self.name} {self.venue_id}>'
 
 
-class ArtistGenre(db.Model):
-  __tablename__ = 'artistGenre'
-  name = db.Column(db.String(20), primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('artist.id'), nullable=False, primary_key=True)
+class ArtistGenre(Genre):
+  __tablename__ = 'artistGenres'
+  # name = db.Column(db.String(20), primary_key=True)
+  artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False, primary_key=True)
 
 #----------------------------------------------------------------------------#
 # Filters.
